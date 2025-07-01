@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记事本</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <h1>欢迎来到记事本</h1>
+    </div>
+    <div class="container mt-5">
+        <div class="text-center">
+            <a class="btn btn-primary" href="{{ url_for('register') }}">注册</a>
+            <a class="btn btn-secondary" href="{{ url_for('login') }}">登录</a>
+        </div>
+    </div>
+</body>
+</html>
