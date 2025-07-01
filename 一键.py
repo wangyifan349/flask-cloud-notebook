@@ -4,7 +4,6 @@ from flask_wtf import FlaskForm  # 引入Flask-WTF表单
 from wtforms import StringField, TextAreaField, PasswordField  # 引入表单字段
 from wtforms.validators import InputRequired, Length  # 引入表单验证器
 from werkzeug.security import generate_password_hash, check_password_hash  # 引入Werkzeug用于密码安全
-import markdown2
 import os
 
 app = Flask(__name__)
@@ -105,23 +104,32 @@ def delete(note_id):
         db.session.commit()  # 更新数据库
     return redirect(url_for('index'))  # 重定向到首页
 
-@app.route('/note/<int:note_id>', methods=['GET'])
-def note_content(note_id):
-    note = Note.query.get_or_404(note_id)  # 查找笔记或返回404
-    if note.author.id != session.get('user_id'):  # 确认用户是所有者
-        return redirect(url_for('index'))  # 不是所有者则重定向
-    return jsonify({'title': note.title, 'content': note.content})  # 返回JSON响应
-
 @app.route('/search', methods=['GET'])
 def search_notes():
     if 'user_id' not in session:  # 检查用户是否登录
         return redirect(url_for('login'))  # 否则重定向到登录
     query = request.args.get('query', '')  # 获取搜索查询
     user = User.query.filter_by(id=session['user_id']).first()  # 获取当前用户
-    notes = Note.query.filter(Note.user_id == user.id, Note.title.contains(query)).all()  # 搜索匹配的笔记
-    return render_template_string(HTML_SEARCH_RESULTS, notes=notes, query=query)  # 渲染搜索结果页面
+    notes = Note.query.filter(Note.user_id == user.id).all()  # 用户的所有笔记
+    results = [note for note in notes if lcs(note.title, query) > 0]  # 使用LCS过滤结果
+    results.sort(key=lambda note: -lcs(note.title, query))  # 按LCS长度排序
+    return render_template_string(HTML_SEARCH_RESULTS, notes=results, query=query)  # 渲染搜索结果页面
 
-# HTML 模板
+def lcs(X, Y):
+    # 计算两个字符串X和Y的最长公共子序列长度
+    m = len(X)
+    n = len(Y)
+    L = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(m + 1):
+        for j in range(n + 1):
+            if i == 0 or j == 0:
+                L[i][j] = 0
+            elif X[i - 1] == Y[j - 1]:
+                L[i][j] = L[i - 1][j - 1] + 1
+            else:
+                L[i][j] = max(L[i - 1][j], L[i][j - 1])
+    return L[m][n]
+
 HTML_INDEX = """
 <!DOCTYPE html>
 <html lang="en">
